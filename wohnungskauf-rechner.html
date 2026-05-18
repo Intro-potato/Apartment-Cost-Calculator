@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Wohnungskauf-Rechner · Germany</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #F5F3EE;
+    --surface: #FFFFFF;
+    --surface2: #F0EDE6;
+    --border: #DDD9D0;
+    --border-strong: #C8C2B4;
+    --text: #1A1814;
+    --text2: #6B6560;
+    --text3: #9C9590;
+    --accent: #1D4E3A;
+    --accent-light: #E8F0EB;
+    --accent2: #B85C38;
+    --accent2-light: #FAF0EB;
+    --blue: #1E4A7A;
+    --blue-light: #EAF0F8;
+    --warn: #A03020;
+    --warn-light: #FBF0ED;
+    --radius: 12px;
+    --radius-sm: 8px;
+    --shadow: 0 2px 8px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.1), 0 0 0 1px rgba(0,0,0,0.04);
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* ── Header ── */
+  header {
+    background: var(--accent);
+    color: white;
+    padding: 28px 40px 24px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  header h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 28px;
+    font-weight: 400;
+    letter-spacing: -0.3px;
+    line-height: 1.2;
+  }
+  header h1 span { font-style: italic; opacity: 0.75; }
+  header p { font-size: 13px; opacity: 0.65; margin-top: 4px; }
+  .header-badge {
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.85);
+  }
+
+  /* ── Layout ── */
+  .app { display: grid; grid-template-columns: 380px 1fr; min-height: calc(100vh - 96px); }
+
+  /* ── Sidebar ── */
+  aside {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 0;
+  }
+  .sidebar-section {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sidebar-section:last-child { border-bottom: none; }
+  .section-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text3);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .section-label svg { width: 14px; height: 14px; }
+
+  /* ── Form fields ── */
+  .field { margin-bottom: 14px; }
+  .field:last-child { margin-bottom: 0; }
+  .field label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text2);
+    margin-bottom: 5px;
+  }
+  .field .hint {
+    font-size: 11px;
+    color: var(--text3);
+    margin-top: 3px;
+    line-height: 1.4;
+  }
+
+  input[type="number"], select {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 14px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    appearance: none;
+  }
+  input[type="number"]:focus, select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(29,78,58,0.12);
+  }
+  select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B6560' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+    cursor: pointer;
+  }
+  .input-prefix-wrap {
+    position: relative;
+  }
+  .input-prefix-wrap .prefix {
+    position: absolute;
+    left: 11px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text3);
+    font-size: 14px;
+    font-weight: 500;
+    pointer-events: none;
+  }
+  .input-prefix-wrap input {
+    padding-left: 24px;
+  }
+
+  /* ── Sliders ── */
+  .slider-wrap {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 10px;
+  }
+  .slider-val {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    min-width: 52px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    cursor: pointer;
+    position: relative;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid white;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+    cursor: pointer;
+    transition: transform 0.1s;
+  }
+  input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.15); }
+  input[type="range"]::-moz-range-thumb {
+    width: 18px; height: 18px; border-radius: 50%;
+    background: var(--accent); border: 2px solid white;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2); cursor: pointer;
+  }
+  input[type="range"]:focus { outline: none; }
+  input[type="range"]:focus::-webkit-slider-thumb { box-shadow: 0 0 0 3px rgba(29,78,58,0.2); }
+
+  /* ── Main panel ── */
+  main { padding: 28px 32px; overflow-y: auto; }
+
+  /* ── Summary cards ── */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+  .sum-card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    box-shadow: var(--shadow);
+    border-left: 3px solid transparent;
+  }
+  .sum-card.primary { border-left-color: var(--accent); }
+  .sum-card.danger { border-left-color: var(--warn); }
+  .sum-card.info { border-left-color: var(--blue); }
+  .sum-card.neutral { border-left-color: var(--border-strong); }
+  .sum-card .label {
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text3);
+    margin-bottom: 6px;
+  }
+  .sum-card .value {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    color: var(--text);
+    letter-spacing: -0.5px;
+    line-height: 1;
+  }
+  .sum-card .sub { font-size: 11px; color: var(--text3); margin-top: 4px; }
+
+  /* ── Tabs ── */
+  .tabs { display: flex; gap: 2px; margin-bottom: 20px; background: var(--surface2); padding: 4px; border-radius: var(--radius-sm); width: fit-content; }
+  .tab-btn {
+    padding: 8px 18px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text2);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .tab-btn:hover { color: var(--text); background: rgba(0,0,0,0.04); }
+  .tab-btn.active {
+    background: var(--surface);
+    color: var(--accent);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  }
+
+  /* ── Panel ── */
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* ── Breakdown table ── */
+  .breakdown-card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+  .breakdown-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--text3);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--text3);
+    padding: 10px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+  }
+  th:last-child { text-align: right; }
+  td {
+    padding: 11px 20px;
+    font-size: 13px;
+    color: var(--text);
+    border-bottom: 1px solid var(--border);
+  }
+  td:last-child { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+  tr:last-child td { border-bottom: none; }
+  tr.group-header td {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text3);
+    background: var(--surface2);
+    padding: 8px 20px;
+  }
+  tr.total-row td {
+    background: var(--accent-light);
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--accent);
+  }
+  tr.total-row.danger td {
+    background: var(--warn-light);
+    color: var(--warn);
+  }
+  tr.sub-row td { color: var(--text2); font-size: 12px; padding-left: 36px; }
+  tr.sub-row td:last-child { font-weight: 500; }
+
+  /* ── Chart area ── */
+  .chart-card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  .chart-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text2);
+    margin-bottom: 16px;
+  }
+  .chart-wrap { position: relative; width: 100%; }
+
+  /* ── Legend ── */
+  .legend { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 12px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text2); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 2px; }
+
+  /* ── Two-col layout ── */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+  /* ── Affordability bar ── */
+  .afford-bar-wrap { margin-top: 16px; }
+  .afford-bar-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--text2); margin-bottom: 6px; }
+  .afford-bar-bg { height: 10px; background: var(--border); border-radius: 5px; overflow: hidden; }
+  .afford-bar-fill { height: 100%; border-radius: 5px; transition: width 0.4s ease; }
+  .afford-status { font-size: 12px; font-weight: 600; margin-top: 8px; }
+
+  /* ── Tooltip-like info ── */
+  .info-box {
+    background: var(--blue-light);
+    border: 1px solid #B5D4F4;
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    font-size: 12px;
+    color: var(--blue);
+    line-height: 1.5;
+    margin-top: 12px;
+  }
+  .info-box strong { font-weight: 600; }
+
+  /* ── Responsive ── */
+  @media (max-width: 1100px) {
+    .app { grid-template-columns: 320px 1fr; }
+    .summary-grid { grid-template-columns: repeat(2, 1fr); }
+    .two-col { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 820px) {
+    .app { grid-template-columns: 1fr; }
+    aside { border-right: none; border-bottom: 1px solid var(--border); }
+    header { padding: 20px 20px 18px; }
+    main { padding: 20px; }
+    .summary-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  /* ── Animations ── */
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .sum-card { animation: fadeUp 0.3s ease both; }
+  .sum-card:nth-child(2) { animation-delay: 0.05s; }
+  .sum-card:nth-child(3) { animation-delay: 0.1s; }
+  .sum-card:nth-child(4) { animation-delay: 0.15s; }
+
+  /* ── Print button ── */
+  .actions { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+  .btn {
+    padding: 9px 18px;
+    border-radius: var(--radius-sm);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text2);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn:hover { background: var(--surface2); border-color: var(--border-strong); color: var(--text); }
+  .btn.primary { background: var(--accent); color: white; border-color: var(--accent); }
+  .btn.primary:hover { background: #16402F; }
+  .btn svg { width: 14px; height: 14px; }
+
+  @media print {
+    header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .app { display: block; }
+    aside { display: none; }
+    main { padding: 0; }
+    .actions, .tabs { display: none; }
+    .panel { display: block !important; margin-bottom: 24px; }
+    .breakdown-card, .chart-card { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Wohnungskauf-<span>Rechner</span></h1>
+    <p>Full cost calculator for buying an apartment in Germany</p>
+  </div>
+  <div class="header-badge">🇩🇪 Germany 2024/2025</div>
+</header>
+
+<div class="app">
+  <!-- ═══════════════ SIDEBAR ═══════════════ -->
+  <aside>
+
+    <div class="sidebar-section">
+      <div class="section-label">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 6.5L8 2l6 4.5V14H2V6.5z"/><rect x="6" y="10" width="4" height="4"/></svg>
+        Purchase details
+      </div>
+
+      <div class="field">
+        <label>Purchase price (Kaufpreis)</label>
+        <div class="input-prefix-wrap">
+          <span class="prefix">€</span>
+          <input type="number" id="price" value="450000" min="50000" max="5000000" step="5000" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Apartment size (m²)</label>
+        <input type="number" id="sqm" value="70" min="20" max="400" />
+      </div>
+
+      <div class="field">
+        <label>Bundesland (Grunderwerbsteuer rate)</label>
+        <select id="state">
+          <option value="3.5">Bayern — 3.5%</option>
+          <option value="3.5">Hamburg — 3.5%</option>
+          <option value="4.0">Sachsen — 4.0%</option>
+          <option value="4.5">Bremen — 4.5%</option>
+          <option value="4.5">Niedersachsen — 4.5%</option>
+          <option value="5.0" selected>Berlin — 5.0% (reduced 2024)</option>
+          <option value="5.0">Hessen — 5.0%</option>
+          <option value="5.0">Mecklenburg-Vorpommern — 5.0%</option>
+          <option value="5.0">Rheinland-Pfalz — 5.0%</option>
+          <option value="5.0">Sachsen-Anhalt — 5.0%</option>
+          <option value="5.0">Thüringen — 5.0%</option>
+          <option value="6.0">Brandenburg — 6.0%</option>
+          <option value="6.0">Nordrhein-Westfalen — 6.0%</option>
+          <option value="6.0">Saarland — 6.0%</option>
+          <option value="6.0">Schleswig-Holstein — 6.0%</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Makler fee — buyer side (incl. 19% MwSt)</label>
+        <div class="slider-wrap">
+          <input type="range" id="makler" min="0" max="3.57" step="0.01" value="1.785" />
+          <span class="slider-val" id="makler-out">1.79%</span>
+        </div>
+        <div class="hint">Max 3.57% (half of total 7.14%). Since Dec 2020, seller must pay at least equal share.</div>
+      </div>
+
+      <div class="field">
+        <label>Notar + Grundbuch fees</label>
+        <div class="slider-wrap">
+          <input type="range" id="notary" min="1.5" max="2.5" step="0.05" value="2.0" />
+          <span class="slider-val" id="notary-out">2.00%</span>
+        </div>
+        <div class="hint">Approx. 1.5–2.0% notar + 0.5% Grundbuch</div>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="section-label">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="4" width="14" height="10" rx="2"/><path d="M5 4V3a3 3 0 016 0v1"/></svg>
+        Financing (Finanzierung)
+      </div>
+
+      <div class="field">
+        <label>Down payment / Eigenkapital</label>
+        <div class="slider-wrap">
+          <input type="range" id="dp" min="0" max="60" step="1" value="20" />
+          <span class="slider-val" id="dp-out">20%</span>
+        </div>
+        <div class="hint">Note: Nebenkosten should be covered from Eigenkapital on top</div>
+      </div>
+
+      <div class="field">
+        <label>Mortgage interest rate (Zinssatz p.a.)</label>
+        <div class="slider-wrap">
+          <input type="range" id="rate" min="0.5" max="7" step="0.05" value="3.8" />
+          <span class="slider-val" id="rate-out">3.80%</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Initial repayment rate (Anfangstilgung p.a.)</label>
+        <div class="slider-wrap">
+          <input type="range" id="tilgung" min="0.5" max="6" step="0.1" value="2.0" />
+          <span class="slider-val" id="tilgung-out">2.0%</span>
+        </div>
+        <div class="hint">Higher = faster payoff, higher monthly payment</div>
+      </div>
+
+      <div class="field">
+        <label>Fixed rate period (Zinsbindung)</label>
+        <select id="fixedyears">
+          <option value="5">5 years</option>
+          <option value="10" selected>10 years</option>
+          <option value="15">15 years</option>
+          <option value="20">20 years</option>
+          <option value="30">30 years</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Monthly net household income</label>
+        <div class="input-prefix-wrap">
+          <span class="prefix">€</span>
+          <input type="number" id="income" value="5000" min="1000" step="100" />
+        </div>
+        <div class="hint">Used to calculate affordability ratio</div>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="section-label">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1v14M1 8h14"/><circle cx="8" cy="8" r="7"/></svg>
+        Monthly running costs
+      </div>
+
+      <div class="field">
+        <label>Hausgeld (HOA / Wohngeld)</label>
+        <div class="slider-wrap">
+          <input type="range" id="hausgeld" min="100" max="800" step="10" value="300" />
+          <span class="slider-val" id="hausgeld-out">€300</span>
+        </div>
+        <div class="hint">Incl. building insurance, Hausmeister, heating system, Instandhaltungsrücklage</div>
+      </div>
+
+      <div class="field">
+        <label>Electricity (Strom)</label>
+        <div class="slider-wrap">
+          <input type="range" id="strom" min="50" max="300" step="5" value="100" />
+          <span class="slider-val" id="strom-out">€100</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Internet + telephone</label>
+        <div class="slider-wrap">
+          <input type="range" id="internet" min="20" max="100" step="5" value="40" />
+          <span class="slider-val" id="internet-out">€40</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Contents insurance (Hausratversicherung)</label>
+        <div class="slider-wrap">
+          <input type="range" id="hausrat" min="5" max="60" step="1" value="15" />
+          <span class="slider-val" id="hausrat-out">€15</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Private maintenance buffer (Rücklage)</label>
+        <div class="slider-wrap">
+          <input type="range" id="reserve" min="0" max="400" step="10" value="100" />
+          <span class="slider-val" id="reserve-out">€100</span>
+        </div>
+        <div class="hint">Private buffer for windows, appliances, bathroom, etc.</div>
+      </div>
+
+      <div class="field">
+        <label>Grundsteuer (annual property tax)</label>
+        <div class="slider-wrap">
+          <input type="range" id="grundsteuer" min="100" max="3000" step="50" value="600" />
+          <span class="slider-val" id="grundsteuer-out">€600 /yr</span>
+        </div>
+        <div class="hint">Reform ongoing since 2025 — varies by Gemeinde & assessment value</div>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="section-label">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 14L6 10M14 2L10 6M6 10l4-4"/><circle cx="4.5" cy="11.5" r="2"/><circle cx="11.5" cy="4.5" r="2"/></svg>
+        One-time extras
+      </div>
+
+      <div class="field">
+        <label>Renovation / Renovierung budget</label>
+        <div class="input-prefix-wrap">
+          <span class="prefix">€</span>
+          <input type="number" id="reno" value="0" min="0" step="500" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Moving costs (Umzugskosten)</label>
+        <div class="input-prefix-wrap">
+          <span class="prefix">€</span>
+          <input type="number" id="moving" value="1500" min="0" step="100" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label>New furniture / appliances</label>
+        <div class="input-prefix-wrap">
+          <span class="prefix">€</span>
+          <input type="number" id="furniture" value="5000" min="0" step="500" />
+        </div>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- ═══════════════ MAIN ═══════════════ -->
+  <main>
+
+    <!-- Summary cards -->
+    <div class="summary-grid" id="summary-grid">
+      <div class="sum-card danger" id="sc-total"></div>
+      <div class="sum-card primary" id="sc-loan"></div>
+      <div class="sum-card info" id="sc-monthly"></div>
+      <div class="sum-card neutral" id="sc-payoff"></div>
+    </div>
+
+    <!-- Actions -->
+    <div class="actions">
+      <button class="btn primary" onclick="window.print()">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6V1h8v5M4 11H2V6h12v5h-2M4 11h8v4H4z"/></svg>
+        Print / Save PDF
+      </button>
+      <button class="btn" onclick="copyResults()">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="5" width="9" height="10" rx="1"/><path d="M11 5V3a1 1 0 00-1-1H2a1 1 0 00-1 1v9a1 1 0 001 1h2"/></svg>
+        Copy summary
+      </button>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab-btn active" id="tab-upfront" onclick="showTab('upfront')">📋 Upfront costs</button>
+      <button class="tab-btn" id="tab-monthly" onclick="showTab('monthly')">📅 Monthly costs</button>
+      <button class="tab-btn" id="tab-loan" onclick="showTab('loan')">📈 Loan amortization</button>
+      <button class="tab-btn" id="tab-afford" onclick="showTab('afford')">✅ Affordability</button>
+    </div>
+
+    <!-- Panel: Upfront -->
+    <div class="panel active" id="panel-upfront">
+      <div class="two-col">
+        <div>
+          <div class="breakdown-card">
+            <div class="breakdown-header">💶 Kaufnebenkosten breakdown</div>
+            <table><thead><tr><th>Item</th><th>Amount</th></tr></thead>
+            <tbody id="tb-upfront"></tbody></table>
+          </div>
+        </div>
+        <div>
+          <div class="chart-card">
+            <div class="chart-title">Cost composition</div>
+            <div class="legend" id="legend-upfront"></div>
+            <div class="chart-wrap" style="height:260px;"><canvas id="pieChart" role="img" aria-label="Pie chart of purchase cost breakdown">Cost breakdown by category</canvas></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel: Monthly -->
+    <div class="panel" id="panel-monthly">
+      <div class="two-col">
+        <div>
+          <div class="breakdown-card">
+            <div class="breakdown-header">📅 Monthly outgoings</div>
+            <table><thead><tr><th>Item</th><th>Per month</th></tr></thead>
+            <tbody id="tb-monthly"></tbody></table>
+          </div>
+        </div>
+        <div>
+          <div class="chart-card">
+            <div class="chart-title">Monthly cost breakdown</div>
+            <div class="legend" id="legend-monthly"></div>
+            <div class="chart-wrap" style="height:260px;"><canvas id="barChart" role="img" aria-label="Bar chart of monthly costs">Monthly cost categories</canvas></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel: Loan -->
+    <div class="panel" id="panel-loan">
+      <div class="breakdown-card" style="margin-bottom:20px;">
+        <div class="breakdown-header">🏦 Loan summary</div>
+        <table><thead><tr><th>Metric</th><th>Value</th></tr></thead>
+        <tbody id="tb-loan"></tbody></table>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Amortization — remaining balance vs. cumulative interest</div>
+        <div class="legend">
+          <div class="legend-item"><div class="legend-dot" style="background:#1D4E3A;"></div>Remaining balance</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#B85C38; border:1px dashed #B85C38;"></div>Cumulative interest paid</div>
+        </div>
+        <div class="chart-wrap" style="height:320px;"><canvas id="loanChart" role="img" aria-label="Loan amortization over time">Loan amortization chart</canvas></div>
+      </div>
+    </div>
+
+    <!-- Panel: Affordability -->
+    <div class="panel" id="panel-afford">
+      <div class="two-col">
+        <div>
+          <div class="breakdown-card">
+            <div class="breakdown-header">✅ Affordability check</div>
+            <table><thead><tr><th>Metric</th><th>Value</th></tr></thead>
+            <tbody id="tb-afford"></tbody></table>
+          </div>
+        </div>
+        <div>
+          <div class="chart-card">
+            <div class="chart-title">Housing cost ratio (% of net income)</div>
+            <div id="afford-bars"></div>
+            <div class="info-box" id="afford-advice"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// ── Charts ──────────────────────────────────────────────
+let pieChart = null, barChart = null, loanChartInst = null;
+let activeTab = 'upfront';
+
+const COLORS = {
+  accent: '#1D4E3A', accent2: '#B85C38', blue: '#1E4A7A',
+  gray: '#888580', teal: '#1D7A6A', amber: '#8A6012',
+  red: '#A03020', green: '#3B6D11', purple: '#5A3AB7',
+};
+
+function fmt(n) { return '€' + Math.round(n).toLocaleString('de-DE'); }
+function fmtK(n) {
+  const r = Math.round(n);
+  return r >= 100000 ? '€' + (r/1000).toFixed(0) + ' K' : r >= 10000 ? '€' + (r/1000).toFixed(1) + ' K' : fmt(r);
+}
+function pct(n, d=2) { return n.toFixed(d).replace('.',',') + ' %'; }
+function yrs(n) { return isFinite(n) ? n.toFixed(1).replace('.',',') + ' yrs' : '>40 yrs'; }
+
+function showTab(tab) {
+  activeTab = tab;
+  ['upfront','monthly','loan','afford'].forEach(t => {
+    document.getElementById('panel-'+t).classList.toggle('active', t === tab);
+    document.getElementById('tab-'+t).classList.toggle('active', t === tab);
+  });
+  if (tab === 'loan') renderLoanChart();
+  if (tab === 'upfront') renderPieChart();
+  if (tab === 'monthly') renderBarChart();
+}
+
+function getVals() {
+  const g = id => parseFloat(document.getElementById(id).value) || 0;
+  return {
+    price: g('price'),
+    sqm: g('sqm') || 1,
+    stateRate: g('state') / 100,
+    maklerPct: g('makler') / 100,
+    notaryPct: g('notary') / 100,
+    dpPct: g('dp') / 100,
+    interestRate: g('rate') / 100,
+    tilgungRate: g('tilgung') / 100,
+    hausgeld: g('hausgeld'),
+    strom: g('strom'),
+    internet: g('internet'),
+    hausrat: g('hausrat'),
+    reserve: g('reserve'),
+    grundsteuer: g('grundsteuer'),
+    reno: g('reno'),
+    moving: g('moving'),
+    furniture: g('furniture'),
+    fixedYears: g('fixedyears'),
+    income: g('income'),
+  };
+}
+
+function compute(v) {
+  const grunderwerbsteuer = v.price * v.stateRate;
+  const maklerFee = v.price * v.maklerPct;
+  const notaryFee = v.price * v.notaryPct;
+  const nebenkosten = grunderwerbsteuer + maklerFee + notaryFee;
+  const downPayment = v.price * v.dpPct;
+  const loanAmount = v.price - downPayment + nebenkosten;
+  const totalUpfront = downPayment + nebenkosten + v.reno + v.moving + v.furniture;
+
+  const monthlyRate = v.interestRate / 12;
+  const annuityRate = (v.interestRate + v.tilgungRate) / 12;
+  const monthlyPayment = loanAmount * annuityRate;
+  const monthlyInterest = loanAmount * monthlyRate;
+  const monthlyTilgung = monthlyPayment - monthlyInterest;
+
+  const monthlyGS = v.grundsteuer / 12;
+  const monthlyHousing = monthlyPayment + v.hausgeld + monthlyGS;
+  const monthlyAll = monthlyHousing + v.strom + v.internet + v.hausrat + v.reserve;
+
+  const pricePerSqm = v.price / v.sqm;
+
+  // payoff
+  const totalYears = monthlyRate > 0
+    ? Math.log(monthlyPayment / Math.max(0.01, monthlyPayment - loanAmount * monthlyRate)) / (12 * Math.log(1 + monthlyRate))
+    : loanAmount / (monthlyPayment * 12);
+
+  const totalInterest = isFinite(totalYears)
+    ? monthlyPayment * totalYears * 12 - loanAmount
+    : Infinity;
+
+  // balance after fixed period
+  const balFixed = calcBalance(loanAmount, monthlyRate, monthlyPayment, v.fixedYears * 12);
+
+  // LTV
+  const ltv = (loanAmount / v.price) * 100;
+
+  return {
+    grunderwerbsteuer, maklerFee, notaryFee, nebenkosten,
+    downPayment, loanAmount, totalUpfront,
+    monthlyPayment, monthlyInterest, monthlyTilgung,
+    monthlyGS, monthlyHousing, monthlyAll,
+    pricePerSqm, totalYears, totalInterest,
+    balFixed, ltv,
+    nebenkostenPct: (nebenkosten / v.price) * 100,
+    housingRatio: (monthlyHousing / v.income) * 100,
+    totalRatio: (monthlyAll / v.income) * 100,
+  };
+}
+
+function calcBalance(principal, monthlyRate, monthlyPmt, months) {
+  let bal = principal;
+  for (let i = 0; i < months; i++) {
+    if (bal <= 0) return 0;
+    bal = bal * (1 + monthlyRate) - monthlyPmt;
+  }
+  return Math.max(0, bal);
+}
+
+// ── Render ───────────────────────────────────────────────
+function render() {
+  const v = getVals();
+  const c = compute(v);
+
+  // Summary cards
+  document.getElementById('sc-total').innerHTML = `
+    <div class="label">Total cash needed</div>
+    <div class="value">${fmtK(c.totalUpfront)}</div>
+    <div class="sub">Eigenkapital + Nebenkosten + extras</div>`;
+  document.getElementById('sc-loan').innerHTML = `
+    <div class="label">Loan (Darlehensbetrag)</div>
+    <div class="value">${fmtK(c.loanAmount)}</div>
+    <div class="sub">LTV ${pct(c.ltv,1)}</div>`;
+  document.getElementById('sc-monthly').innerHTML = `
+    <div class="label">Total monthly</div>
+    <div class="value">${fmt(c.monthlyAll)}</div>
+    <div class="sub">Mortgage + all running costs</div>`;
+  document.getElementById('sc-payoff').innerHTML = `
+    <div class="label">Full payoff</div>
+    <div class="value">${yrs(c.totalYears)}</div>
+    <div class="sub">At ${pct(v.tilgungRate*100,1)} Tilgung</div>`;
+
+  // Upfront table
+  document.getElementById('tb-upfront').innerHTML = `
+    <tr class="group-header"><td colspan="2">Purchase price</td></tr>
+    <tr><td>Kaufpreis</td><td>${fmt(v.price)}</td></tr>
+    <tr><td style="color:var(--text3);font-size:12px;">Price per m² (${v.sqm} m²)</td><td style="color:var(--text3);font-size:12px;">${fmt(c.pricePerSqm)}/m²</td></tr>
+    <tr class="group-header"><td colspan="2">Kaufnebenkosten (${pct(c.nebenkostenPct,1)})</td></tr>
+    <tr><td>Grunderwerbsteuer (${pct(v.stateRate*100,1)})</td><td>${fmt(c.grunderwerbsteuer)}</td></tr>
+    <tr><td>Maklergebühr (${pct(v.maklerPct*100,2)} incl. MwSt)</td><td>${fmt(c.maklerFee)}</td></tr>
+    <tr><td>Notar + Grundbuch (${pct(v.notaryPct*100,1)})</td><td>${fmt(c.notaryFee)}</td></tr>
+    <tr class="total-row"><td>Subtotal Nebenkosten</td><td>${fmt(c.nebenkosten)}</td></tr>
+    <tr class="group-header"><td colspan="2">Eigenkapital &amp; extras</td></tr>
+    <tr><td>Down payment (Eigenkapital)</td><td>${fmt(c.downPayment)}</td></tr>
+    <tr><td>Renovation (Renovierung)</td><td>${fmt(v.reno)}</td></tr>
+    <tr><td>Moving costs (Umzugskosten)</td><td>${fmt(v.moving)}</td></tr>
+    <tr><td>Furniture / appliances</td><td>${fmt(v.furniture)}</td></tr>
+    <tr class="total-row danger"><td>Total cash on closing day</td><td>${fmt(c.totalUpfront)}</td></tr>`;
+
+  // Monthly table
+  document.getElementById('tb-monthly').innerHTML = `
+    <tr class="group-header"><td colspan="2">Mortgage</td></tr>
+    <tr><td>Annuity payment (Annuität)</td><td>${fmt(c.monthlyPayment)}</td></tr>
+    <tr class="sub-row"><td>→ Interest (Zinsanteil)</td><td>${fmt(c.monthlyInterest)}</td></tr>
+    <tr class="sub-row"><td>→ Repayment (Tilgungsanteil)</td><td>${fmt(c.monthlyTilgung)}</td></tr>
+    <tr class="group-header"><td colspan="2">Building &amp; property</td></tr>
+    <tr><td>Hausgeld (HOA)</td><td>${fmt(v.hausgeld)}</td></tr>
+    <tr><td>Grundsteuer (monthly share)</td><td>${fmt(c.monthlyGS)}</td></tr>
+    <tr class="total-row"><td>Subtotal housing costs</td><td>${fmt(c.monthlyHousing)}</td></tr>
+    <tr class="group-header"><td colspan="2">Utilities &amp; personal</td></tr>
+    <tr><td>Electricity (Strom)</td><td>${fmt(v.strom)}</td></tr>
+    <tr><td>Internet + telephone</td><td>${fmt(v.internet)}</td></tr>
+    <tr><td>Hausratversicherung</td><td>${fmt(v.hausrat)}</td></tr>
+    <tr><td>Private Instandhaltungsrücklage</td><td>${fmt(v.reserve)}</td></tr>
+    <tr class="total-row danger"><td>Total monthly outgoings</td><td>${fmt(c.monthlyAll)}</td></tr>
+    <tr><td style="color:var(--text3);font-size:12px;">Annual total</td><td style="color:var(--text3);font-size:12px;">${fmt(c.monthlyAll * 12)}</td></tr>`;
+
+  // Loan table
+  const yr = v.fixedYears;
+  document.getElementById('tb-loan').innerHTML = `
+    <tr><td>Loan amount (Darlehensbetrag)</td><td>${fmt(c.loanAmount)}</td></tr>
+    <tr><td>Loan-to-value ratio (LTV)</td><td>${pct(c.ltv,1)}</td></tr>
+    <tr><td>Monthly annuity payment</td><td>${fmt(c.monthlyPayment)}</td></tr>
+    <tr><td>Monthly interest (year 1)</td><td>${fmt(c.monthlyInterest)}</td></tr>
+    <tr><td>Monthly repayment (year 1)</td><td>${fmt(c.monthlyTilgung)}</td></tr>
+    <tr><td>Fixed rate period</td><td>${yr} years at ${pct(v.interestRate*100,2)}</td></tr>
+    <tr><td>Remaining balance after ${yr} years</td><td>${fmt(c.balFixed)}</td></tr>
+    <tr><td>Total interest over loan life</td><td>${isFinite(c.totalInterest) ? fmt(c.totalInterest) : '>40 yrs'}</td></tr>
+    <tr class="total-row"><td>Estimated full payoff</td><td>${yrs(c.totalYears)}</td></tr>`;
+
+  // Affordability
+  const hrColor = c.housingRatio < 30 ? '#3B6D11' : c.housingRatio < 40 ? '#8A6012' : '#A03020';
+  const trColor = c.totalRatio < 40 ? '#3B6D11' : c.totalRatio < 50 ? '#8A6012' : '#A03020';
+  const advice = c.housingRatio < 30
+    ? '✅ <strong>Comfortable</strong> — housing costs are below 30% of income, which is generally considered healthy in Germany.'
+    : c.housingRatio < 40
+    ? '⚠️ <strong>Moderate</strong> — you are above the 30% threshold. Feasible, but leaves less buffer. Consider lower loan or higher Tilgung.'
+    : '🔴 <strong>Stretched</strong> — housing costs exceed 40% of income. German banks typically cap lending at around 35–40% of net income.';
+
+  document.getElementById('tb-afford').innerHTML = `
+    <tr><td>Monthly net income</td><td>${fmt(v.income)}</td></tr>
+    <tr><td>Housing cost (mortgage + Hausgeld + Grundsteuer)</td><td>${fmt(c.monthlyHousing)}</td></tr>
+    <tr><td>Housing cost ratio</td><td style="color:${hrColor};font-weight:700;">${pct(c.housingRatio,1)}</td></tr>
+    <tr><td>Total monthly outgoings</td><td>${fmt(c.monthlyAll)}</td></tr>
+    <tr><td>Total cost ratio</td><td style="color:${trColor};font-weight:700;">${pct(c.totalRatio,1)}</td></tr>
+    <tr><td>Remaining after all costs</td><td>${fmt(v.income - c.monthlyAll)}</td></tr>
+    <tr class="total-row"><td>Recommended max (30% rule)</td><td>${fmt(v.income * 0.3)}</td></tr>`;
+
+  document.getElementById('afford-bars').innerHTML = `
+    <div class="afford-bar-wrap">
+      <div class="afford-bar-label"><span>Housing cost ratio</span><span style="color:${hrColor};font-weight:600;">${pct(c.housingRatio,1)}</span></div>
+      <div class="afford-bar-bg"><div class="afford-bar-fill" style="width:${Math.min(c.housingRatio,100)}%;background:${hrColor};"></div></div>
+      <div class="afford-bar-label" style="margin-top:16px;"><span>Total cost ratio</span><span style="color:${trColor};font-weight:600;">${pct(c.totalRatio,1)}</span></div>
+      <div class="afford-bar-bg"><div class="afford-bar-fill" style="width:${Math.min(c.totalRatio,100)}%;background:${trColor};"></div></div>
+    </div>`;
+  document.getElementById('afford-advice').innerHTML = advice;
+
+  // Charts (only re-render active)
+  if (activeTab === 'upfront') renderPieChart(v, c);
+  if (activeTab === 'monthly') renderBarChart(v, c);
+  if (activeTab === 'loan') renderLoanChart(v, c);
+
+  window._v = v; window._c = c;
+}
+
+function renderPieChart(v, c) {
+  if (!v) { v = getVals(); c = compute(v); }
+  const labels = ['Down payment', 'Grunderwerbsteuer', 'Makler', 'Notar+Grundbuch', 'Renovation', 'Moving+Furniture'];
+  const data = [c.downPayment, c.grunderwerbsteuer, c.maklerFee, c.notaryFee, v.reno, v.moving+v.furniture].map(Math.round);
+  const colors = ['#1D4E3A','#B85C38','#1E4A7A','#5A3AB7','#1D7A6A','#8A6012'];
+  if (pieChart) pieChart.destroy();
+  pieChart = new Chart(document.getElementById('pieChart'), {
+    type: 'doughnut',
+    data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 2, borderColor: '#fff' }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.label}: €${ctx.raw.toLocaleString('de-DE')}` } }
+      },
+      cutout: '58%'
+    }
+  });
+  document.getElementById('legend-upfront').innerHTML = labels.map((l,i) =>
+    `<div class="legend-item"><div class="legend-dot" style="background:${colors[i]};"></div>${l}</div>`
+  ).join('');
+}
+
+function renderBarChart(v, c) {
+  if (!v) { v = getVals(); c = compute(v); }
+  const labels = ['Mortgage', 'Hausgeld', 'Grundsteuer', 'Strom', 'Internet', 'Hausrat', 'Reserve'];
+  const data = [c.monthlyPayment, v.hausgeld, c.monthlyGS, v.strom, v.internet, v.hausrat, v.reserve].map(Math.round);
+  const colors = ['#1D4E3A','#1E4A7A','#5A3AB7','#B85C38','#1D7A6A','#8A6012','#888580'];
+  if (barChart) barChart.destroy();
+  barChart = new Chart(document.getElementById('barChart'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{ data, backgroundColor: colors, borderRadius: 4, borderSkipped: false }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ` €${ctx.raw.toLocaleString('de-DE')}` } }
+      },
+      scales: {
+        y: { ticks: { callback: v => '€' + v.toLocaleString('de-DE'), font: { size: 11 } }, grid: { color: 'rgba(0,0,0,0.06)' } },
+        x: { ticks: { font: { size: 11 } }, grid: { display: false } }
+      }
+    }
+  });
+  document.getElementById('legend-monthly').innerHTML = labels.map((l,i) =>
+    `<div class="legend-item"><div class="legend-dot" style="background:${colors[i]};"></div>${l}</div>`
+  ).join('');
+}
+
+function renderLoanChart(v, c) {
+  if (!v) { v = getVals(); c = compute(v); }
+  const { loanAmount } = c;
+  const monthlyRate = v.interestRate / 12;
+  const monthlyPayment = c.monthlyPayment;
+  const maxYears = Math.min(Math.ceil(isFinite(c.totalYears) ? c.totalYears + 2 : 40), 40);
+
+  const labels = [], balances = [], cumInterest = [];
+  let bal = loanAmount, cumInt = 0;
+  for (let y = 0; y <= maxYears; y++) {
+    labels.push(y === 0 ? 'Now' : 'Yr ' + y);
+    balances.push(Math.round(Math.max(0, bal)));
+    cumInterest.push(Math.round(cumInt));
+    if (bal <= 0) { for (let r = y+1; r <= maxYears; r++) { labels.push('Yr '+r); balances.push(0); cumInterest.push(Math.round(cumInt)); } break; }
+    for (let m = 0; m < 12; m++) {
+      const interest = bal * monthlyRate;
+      cumInt += interest;
+      bal -= (monthlyPayment - interest);
+      if (bal <= 0) { bal = 0; break; }
+    }
+  }
+
+  if (loanChartInst) loanChartInst.destroy();
+  loanChartInst = new Chart(document.getElementById('loanChart'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Remaining balance', data: balances, borderColor: '#1D4E3A', backgroundColor: 'rgba(29,78,58,0.07)', fill: true, tension: 0.3, pointRadius: 2, pointHoverRadius: 5 },
+        { label: 'Cumulative interest', data: cumInterest, borderColor: '#B85C38', backgroundColor: 'rgba(184,92,56,0.05)', fill: true, tension: 0.3, borderDash: [6,3], pointRadius: 2, pointHoverRadius: 5 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: €${ctx.raw.toLocaleString('de-DE')}` } } },
+      scales: {
+        y: { ticks: { callback: n => '€' + (n/1000).toFixed(0) + 'K', font: { size: 11 } }, grid: { color: 'rgba(0,0,0,0.06)' } },
+        x: { ticks: { font: { size: 11 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 12 }, grid: { display: false } }
+      }
+    }
+  });
+}
+
+// ── Copy summary ───────────────────────────────────────
+function copyResults() {
+  const v = getVals(); const c = compute(v);
+  const text = `Wohnungskauf-Rechner Summary
+=============================
+Purchase price:     ${fmt(v.price)}
+Down payment:       ${fmt(c.downPayment)} (${pct(v.dpPct*100,0)})
+Kaufnebenkosten:    ${fmt(c.nebenkosten)} (${pct(c.nebenkostenPct,1)})
+  - Grunderwerbsteuer: ${fmt(c.grunderwerbsteuer)}
+  - Makler:            ${fmt(c.maklerFee)}
+  - Notar+Grundbuch:   ${fmt(c.notaryFee)}
+Total cash needed:  ${fmt(c.totalUpfront)}
+Loan amount:        ${fmt(c.loanAmount)}
+
+Monthly mortgage:   ${fmt(c.monthlyPayment)}
+Total monthly:      ${fmt(c.monthlyAll)}
+Housing cost ratio: ${pct(c.housingRatio,1)}
+
+Payoff duration:    ${yrs(c.totalYears)}
+Balance after ${v.fixedYears}yr: ${fmt(c.balFixed)}`;
+  navigator.clipboard.writeText(text).then(() => { alert('Summary copied to clipboard!'); });
+}
+
+// ── Slider sync ────────────────────────────────────────
+const sliders = [
+  ['makler', v => v.toFixed(2) + '%'],
+  ['notary', v => v.toFixed(2) + '%'],
+  ['dp', v => v.toFixed(0) + '%'],
+  ['rate', v => v.toFixed(2) + '%'],
+  ['tilgung', v => v.toFixed(1) + '%'],
+  ['hausgeld', v => '€' + Math.round(v)],
+  ['strom', v => '€' + Math.round(v)],
+  ['internet', v => '€' + Math.round(v)],
+  ['hausrat', v => '€' + Math.round(v)],
+  ['reserve', v => '€' + Math.round(v)],
+  ['grundsteuer', v => '€' + Math.round(v) + ' /yr'],
+];
+sliders.forEach(([id, fmt2]) => {
+  const el = document.getElementById(id);
+  const out = document.getElementById(id + '-out');
+  el.addEventListener('input', () => { out.textContent = fmt2(+el.value); render(); });
+});
+['price','sqm','reno','moving','furniture','income'].forEach(id => {
+  document.getElementById(id).addEventListener('input', render);
+});
+document.getElementById('state').addEventListener('change', render);
+document.getElementById('fixedyears').addEventListener('change', render);
+
+render();
+</script>
+</body>
+</html>
